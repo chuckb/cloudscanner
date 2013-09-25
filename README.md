@@ -16,6 +16,7 @@ GMAIL_PASSWORD = "put your gmail password here"
 SMTP_SERVER = "smtp.gmail.com"
 
 ...
+
 destinations.append(EmailScanDestination("mail name to display on Pi", "mail destination address goes here"))
 
 To start it:
