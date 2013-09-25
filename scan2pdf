@@ -1,0 +1,98 @@
+#!/bin/bash
+ 
+SOURCE=""
+ 
+if [ $# -gt 1 ]
+then
+ 
+SOURCE="--source ADF -l 3"
+yinmm=$4
+xinmm=$3
+outname=$2
+pbreak=$1
+ 
+echo "$pbreak" | egrep "[^0-9,]+"
+if [ $? -ne 1 ]
+then
+echo "Check Sequnence List !"
+exit 1
+fi
+else
+ 
+pbreak=99
+yinmm=$3
+xinmm=$2
+outname=$1
+SOURCE="--batch-count=1"
+ 
+fi
+ 
+# startdir=$(pwd)
+startdir=/tmp
+tmpdir=scan-$RANDOM
+ 
+cd /tmp
+mkdir $tmpdir
+cd $tmpdir
+echo "################## Scanning ###################"
+# scanimage -x 210 -y 297 --batch=out%02d.tif --format=tiff --mode Gray --resolution 300 $SOURCE
+scanimage -x $xinmm -y $yinmm --batch=out%02d.tif --format=tiff --mode Gray --resolution 300 $SOURCE
+ 
+start=1
+cnt=1
+sc=$(echo "$pbreak" | cut -d"," -f1-99 --output-delimiter=" " | wc -w)
+for pb in $(echo "$pbreak" | cut -d "," -f1-99 --output-delimiter=" ")
+do
+ende=$(expr $start + $pb - 1)
+pnr=0
+i=1
+echo "############ Page-Sequence ($cnt), Pages: $pb, Start: $start, End: $ende ############"
+tpages=""
+for page in $(ls out*.tif); do
+pnr=$(expr $pnr + 1)
+if [ $pnr -ge $start -a $pnr -le $ende ]
+then
+echo "... Converting"
+# increase contrast and reduce colordepth
+convert $page -level 15%,85% -depth 2 "b$page"
+rm $page
+# echo "... OCRing"
+tpages="$tpages b$page"
+i=$(expr $i + 1)
+# echo -n " "
+# tesseract $page $page -l eng
+# if [ $sc -gt 1 ]
+# then
+# cnts=`printf %02d $cnt`
+# cat $page.txt >> $outname.$cnts.txt
+# else
+# cat $page.txt >> $outname.txt
+# fi
+ 
+fi
+done
+ 
+echo "... Converting to PDF"
+#Use tiffcp to combine output tiffs to a single mult-page tiff
+tiffcp $tpages output.tif
+rm $tpages
+#Convert the tiff to PDF
+if [ $sc -gt 1 ]
+then
+cnts=`printf %02d $cnt`
+tiff2pdf -z output.tif > $startdir/$outname.$cnts.pdf
+# mv $outname.$cnts.txt $startdir
+else
+tiff2pdf -z output.tif > $startdir/$outname.pdf
+# mv $outname.txt $startdir
+fi
+ 
+start=$(expr $start + $pb)
+cnt=$(expr $cnt + 1)
+ 
+done
+ 
+cd ..
+echo "################ Cleaning Up ################"
+rm -rf $tmpdir
+cd $startdir
