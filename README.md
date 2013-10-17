@@ -3,7 +3,7 @@ cloudscanner
 
 Turn your Raspberry Pi into a scan adapter to easily send PDFs to the cloud.
 
-The complete project can be found at my blog, with all necessary dependencies and complete install instructions.
+The complete project can be found at my blog, with all necessary dependencies and complete install instructions.  See http://myrede.blogspot.com/2013/09/spoiled-pi.html
 
 Once you have done that, pull these files into a directory on the Pi.
 
